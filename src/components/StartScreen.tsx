@@ -12,6 +12,8 @@ interface StartScreenProps {
   score: number;
   onLevelSelect: (level: Level) => void;
   onStartGame: () => void;
+  playerName?: string; // Opcional para mostrar saludo personalizado
+  onChangePlayer?: () => void; // Función para cambiar de jugador
 }
 
 export const StartScreen: React.FC<StartScreenProps> = ({
@@ -19,7 +21,9 @@ export const StartScreen: React.FC<StartScreenProps> = ({
   currentLevel,
   score,
   onLevelSelect,
-  onStartGame
+  onStartGame,
+  playerName,
+  onChangePlayer
 }) => {
   // Función para manejar clic en tarjeta de nivel
   const handleLevelCardClick = (level: Level) => {
@@ -37,6 +41,13 @@ export const StartScreen: React.FC<StartScreenProps> = ({
         <div className="text-6xl md:text-7xl mt-4">
           🥷✨
         </div>
+        {playerName && (
+          <div className="mt-6 mb-4">
+            <p className="font-fredoka text-2xl md:text-3xl text-green-400 font-bold">
+              ¡Hola, {playerName}! 👋
+            </p>
+          </div>
+        )}
         <p className="font-comfortaa text-xl md:text-2xl text-white/80 mt-8 font-light tracking-wide">
           ¡Conviértete en un maestro de las matemáticas!
         </p>
@@ -73,6 +84,18 @@ export const StartScreen: React.FC<StartScreenProps> = ({
           >
             🚀 ¡Comenzar con {currentLevel.emoji} {currentLevel.name}!
           </button>
+          
+          {/* Botón para cambiar jugador */}
+          {playerName && onChangePlayer && (
+            <div className="mt-6">
+              <button
+                onClick={onChangePlayer}
+                className="font-comfortaa text-sm text-white/60 hover:text-white/80 underline transition-colors"
+              >
+                🔄 Cambiar de jugador
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -5,8 +5,12 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Player, GameSession } from "@/interfaces";
-import { PlayerService } from "@/services/playerService";
-import { SessionService } from "@/services/sessionService";
+// Solo usar servicios Mock por ahora
+import { MockPlayerService, MockSessionService } from "@/services/mockServices";
+
+// Solo usar servicios Mock hasta que Firebase esté completamente configurado
+const getPlayerService = () => MockPlayerService;
+const getSessionService = () => MockSessionService;
 
 interface UseFirebasePlayerResult {
   // Estado del jugador
@@ -53,15 +57,17 @@ export const useFirebasePlayer = (): UseFirebasePlayerResult => {
     setError(null);
 
     try {
+      const playerService = getPlayerService();
+
       // Verificar si ya existe un jugador con ese nombre
-      const existingPlayer = await PlayerService.getPlayerByName(name);
+      const existingPlayer = await playerService.getPlayerByName(name);
       if (existingPlayer) {
         setError("Ya existe un jugador con ese nombre");
         setIsLoading(false);
         return;
       }
 
-      const playerId = await PlayerService.createPlayer({
+      const playerId = await playerService.createPlayer({
         name,
         preferences: {
           soundEnabled: preferences?.soundEnabled ?? true,
@@ -100,7 +106,8 @@ export const useFirebasePlayer = (): UseFirebasePlayerResult => {
     setError(null);
 
     try {
-      const player = await PlayerService.getPlayer(playerId);
+      const playerService = getPlayerService();
+      const player = await playerService.getPlayer(playerId);
       if (player) {
         setCurrentPlayer(player);
         localStorage.setItem("numberninja_player_id", playerId);
@@ -121,7 +128,8 @@ export const useFirebasePlayer = (): UseFirebasePlayerResult => {
     setError(null);
 
     try {
-      const player = await PlayerService.getPlayerByName(name);
+      const playerService = getPlayerService();
+      const player = await playerService.getPlayerByName(name);
       if (player) {
         setCurrentPlayer(player);
         localStorage.setItem("numberninja_player_id", player.id);
@@ -141,7 +149,8 @@ export const useFirebasePlayer = (): UseFirebasePlayerResult => {
       if (!currentPlayer) return;
 
       try {
-        await PlayerService.updateProgress(currentPlayer.id, updates);
+        const playerService = getPlayerService();
+        await playerService.updateProgress(currentPlayer.id, updates);
 
         // Actualizar estado local
         setCurrentPlayer((prev) =>
@@ -165,7 +174,8 @@ export const useFirebasePlayer = (): UseFirebasePlayerResult => {
       if (!currentPlayer) return;
 
       try {
-        await PlayerService.updatePreferences(currentPlayer.id, updates);
+        const playerService = getPlayerService();
+        await playerService.updatePreferences(currentPlayer.id, updates);
 
         // Actualizar estado local
         setCurrentPlayer((prev) =>
@@ -189,7 +199,8 @@ export const useFirebasePlayer = (): UseFirebasePlayerResult => {
       if (!currentPlayer) return;
 
       try {
-        const sessionId = await SessionService.startSession(currentPlayer.id, levelId);
+        const sessionService = getSessionService();
+        const sessionId = await sessionService.startSession(currentPlayer.id, levelId);
         setCurrentSessionId(sessionId);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error al iniciar sesión");
@@ -204,7 +215,8 @@ export const useFirebasePlayer = (): UseFirebasePlayerResult => {
       if (!currentSessionId) return;
 
       try {
-        await SessionService.endSession(currentSessionId, sessionData);
+        const sessionService = getSessionService();
+        await sessionService.endSession(currentSessionId, sessionData);
         setCurrentSessionId(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error al finalizar sesión");
@@ -219,7 +231,8 @@ export const useFirebasePlayer = (): UseFirebasePlayerResult => {
       if (!currentSessionId) return;
 
       try {
-        await SessionService.updateSessionStats(currentSessionId, updates);
+        const sessionService = getSessionService();
+        await sessionService.updateSessionStats(currentSessionId, updates);
       } catch (err) {
         console.error("Error updating session stats:", err);
       }

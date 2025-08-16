@@ -3,12 +3,15 @@
 import React from 'react';
 import { GAME_CONFIG } from '@/config/gameConfig';
 import { useGameState } from '@/hooks/useGameState';
+import { useFirebasePlayer } from '@/hooks/useFirebasePlayer';
 import { StartScreen } from '@/components/StartScreen';
 import { GameHeader } from '@/components/GameHeader';
 import { GameArea } from '@/components/GameArea';
+import { PlayerSelection } from '@/components/PlayerSelection';
 
 export default function Home() {
   const gameState = useGameState({ config: GAME_CONFIG });
+  const firebasePlayer = useFirebasePlayer();
 
   // Manejar tecla Enter
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -16,6 +19,29 @@ export default function Home() {
       gameState.submitAnswer();
     }
   };
+
+  // Manejar creación/selección de jugador
+  const handlePlayerCreated = async (name: string) => {
+    await firebasePlayer.createPlayer(name);
+  };
+
+  // Manejar cambio de jugador
+  const handleChangePlayer = () => {
+    firebasePlayer.clearPlayer();
+    gameState.resetGame(); // Resetear el juego también
+  };
+
+  // Si no hay jugador seleccionado, mostrar selección de jugador
+  if (!firebasePlayer.currentPlayer) {
+    return (
+      <PlayerSelection
+        onPlayerSelected={() => {}} // Por ahora no usado
+        onCreatePlayer={handlePlayerCreated}
+        isLoading={firebasePlayer.isLoading}
+        error={firebasePlayer.error}
+      />
+    );
+  }
 
   // Pantalla de inicio
   if (!gameState.gameStarted) {
@@ -26,6 +52,8 @@ export default function Home() {
         score={gameState.score}
         onLevelSelect={gameState.changeLevel}
         onStartGame={gameState.startGame}
+        playerName={firebasePlayer.currentPlayer.name} // Mostrar nombre del jugador
+        onChangePlayer={handleChangePlayer} // Función para cambiar jugador
       />
     );
   }

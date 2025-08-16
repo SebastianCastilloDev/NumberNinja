@@ -4,7 +4,7 @@
 // ==========================================================================
 
 import { collection, doc, getDoc, setDoc, updateDoc, query, where, getDocs, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/firebase-mock"; // Usar configuración mock temporalmente
 import { Player, PlayerProgress, PlayerPreferences } from "@/interfaces";
 
 export class PlayerService {

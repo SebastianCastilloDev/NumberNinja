@@ -50,6 +50,13 @@ export const PlayerSelection: React.FC<PlayerSelectionProps> = ({
           <p className="font-comfortaa text-white/70 text-sm">
             ¿Cuál es tu nombre de ninja?
           </p>
+          
+          {/* Indicador de modo demo */}
+          <div className="mt-4 inline-flex items-center px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full">
+            <span className="text-blue-300 text-xs font-comfortaa">
+              🧪 Modo Demo - Datos guardados localmente
+            </span>
+          </div>
         </div>
 
         {/* Error */}
