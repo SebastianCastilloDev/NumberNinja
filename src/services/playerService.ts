@@ -3,31 +3,21 @@
 // Operaciones CRUD para jugadores en Firebase
 // ==========================================================================
 
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  setDoc, 
-  updateDoc, 
-  query, 
-  where, 
-  getDocs,
-  serverTimestamp 
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { Player, PlayerProgress, PlayerPreferences } from '@/interfaces';
+import { collection, doc, getDoc, setDoc, updateDoc, query, where, getDocs, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Player, PlayerProgress, PlayerPreferences } from "@/interfaces";
 
 export class PlayerService {
-  private static COLLECTION = 'players';
+  private static COLLECTION = "players";
 
   /**
    * Crear un nuevo jugador
    */
-  static async createPlayer(playerData: Omit<Player, 'id' | 'createdAt' | 'lastLoginAt'>): Promise<string> {
+  static async createPlayer(playerData: Omit<Player, "id" | "createdAt" | "lastLoginAt">): Promise<string> {
     try {
       const playerId = `player_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const playerDoc = doc(db, this.COLLECTION, playerId);
-      
+
       const newPlayer: Player = {
         ...playerData,
         id: playerId,
@@ -41,27 +31,27 @@ export class PlayerService {
           totalCoins: 0,
           totalWithdrawn: 0,
           timeSpent: 0,
-          lastPlayed: new Date()
+          lastPlayed: new Date(),
         },
         preferences: {
           soundEnabled: playerData.preferences?.soundEnabled ?? true,
           animationsEnabled: playerData.preferences?.animationsEnabled ?? true,
           preferredDifficulty: playerData.preferences?.preferredDifficulty ?? 1,
-          theme: playerData.preferences?.theme ?? 'default',
-          parentalPin: playerData.preferences?.parentalPin
-        }
+          theme: playerData.preferences?.theme ?? "default",
+          parentalPin: playerData.preferences?.parentalPin,
+        },
       };
 
       await setDoc(playerDoc, {
         ...newPlayer,
         createdAt: serverTimestamp(),
         lastLoginAt: serverTimestamp(),
-        'progress.lastPlayed': serverTimestamp()
+        "progress.lastPlayed": serverTimestamp(),
       });
 
       return playerId;
     } catch (error) {
-      console.error('Error creating player:', error);
+      console.error("Error creating player:", error);
       throw error;
     }
   }
@@ -73,7 +63,7 @@ export class PlayerService {
     try {
       const playerDoc = doc(db, this.COLLECTION, playerId);
       const playerSnap = await getDoc(playerDoc);
-      
+
       if (playerSnap.exists()) {
         const data = playerSnap.data();
         return {
@@ -82,14 +72,14 @@ export class PlayerService {
           lastLoginAt: data.lastLoginAt?.toDate() || new Date(),
           progress: {
             ...data.progress,
-            lastPlayed: data.progress?.lastPlayed?.toDate() || new Date()
-          }
+            lastPlayed: data.progress?.lastPlayed?.toDate() || new Date(),
+          },
         } as Player;
       }
-      
+
       return null;
     } catch (error) {
-      console.error('Error getting player:', error);
+      console.error("Error getting player:", error);
       throw error;
     }
   }
@@ -100,9 +90,9 @@ export class PlayerService {
   static async getPlayerByName(name: string): Promise<Player | null> {
     try {
       const playersRef = collection(db, this.COLLECTION);
-      const q = query(playersRef, where('name', '==', name));
+      const q = query(playersRef, where("name", "==", name));
       const querySnapshot = await getDocs(q);
-      
+
       if (!querySnapshot.empty) {
         const doc = querySnapshot.docs[0];
         const data = doc.data();
@@ -112,14 +102,14 @@ export class PlayerService {
           lastLoginAt: data.lastLoginAt?.toDate() || new Date(),
           progress: {
             ...data.progress,
-            lastPlayed: data.progress?.lastPlayed?.toDate() || new Date()
-          }
+            lastPlayed: data.progress?.lastPlayed?.toDate() || new Date(),
+          },
         } as Player;
       }
-      
+
       return null;
     } catch (error) {
-      console.error('Error getting player by name:', error);
+      console.error("Error getting player by name:", error);
       throw error;
     }
   }
@@ -131,19 +121,19 @@ export class PlayerService {
     try {
       const playerDoc = doc(db, this.COLLECTION, playerId);
       const updateData: any = {};
-      
+
       // Convertir las claves del progreso para Firestore
       Object.entries(progressUpdates).forEach(([key, value]) => {
         updateData[`progress.${key}`] = value;
       });
-      
+
       // Añadir timestamp de última jugada
-      updateData['progress.lastPlayed'] = serverTimestamp();
-      updateData['lastLoginAt'] = serverTimestamp();
+      updateData["progress.lastPlayed"] = serverTimestamp();
+      updateData["lastLoginAt"] = serverTimestamp();
 
       await updateDoc(playerDoc, updateData);
     } catch (error) {
-      console.error('Error updating player progress:', error);
+      console.error("Error updating player progress:", error);
       throw error;
     }
   }
@@ -155,7 +145,7 @@ export class PlayerService {
     try {
       const playerDoc = doc(db, this.COLLECTION, playerId);
       const updateData: any = {};
-      
+
       // Convertir las claves de las preferencias para Firestore
       Object.entries(preferences).forEach(([key, value]) => {
         updateData[`preferences.${key}`] = value;
@@ -163,7 +153,7 @@ export class PlayerService {
 
       await updateDoc(playerDoc, updateData);
     } catch (error) {
-      console.error('Error updating player preferences:', error);
+      console.error("Error updating player preferences:", error);
       throw error;
     }
   }
@@ -175,8 +165,8 @@ export class PlayerService {
     try {
       const playersRef = collection(db, this.COLLECTION);
       const querySnapshot = await getDocs(playersRef);
-      
-      return querySnapshot.docs.map(doc => {
+
+      return querySnapshot.docs.map((doc) => {
         const data = doc.data();
         return {
           ...data,
@@ -184,12 +174,12 @@ export class PlayerService {
           lastLoginAt: data.lastLoginAt?.toDate() || new Date(),
           progress: {
             ...data.progress,
-            lastPlayed: data.progress?.lastPlayed?.toDate() || new Date()
-          }
+            lastPlayed: data.progress?.lastPlayed?.toDate() || new Date(),
+          },
         } as Player;
       });
     } catch (error) {
-      console.error('Error getting all players:', error);
+      console.error("Error getting all players:", error);
       throw error;
     }
   }

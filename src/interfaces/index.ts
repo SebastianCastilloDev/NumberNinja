@@ -141,9 +141,9 @@ export interface Achievement {
   name: string;
   description: string;
   emoji: string;
-  category: 'accuracy' | 'speed' | 'persistence' | 'milestone';
+  category: "accuracy" | "speed" | "persistence" | "milestone";
   requirement: {
-    type: 'streak' | 'total_correct' | 'time_played' | 'level_completed';
+    type: "streak" | "total_correct" | "time_played" | "level_completed";
     value: number;
   };
   reward: {
@@ -165,7 +165,7 @@ export interface PaymentRequest {
   amount: number; // en monedas del juego
   realAmount: number; // en dinero real
   description: string;
-  status: 'pending' | 'approved' | 'rejected' | 'paid';
+  status: "pending" | "approved" | "rejected" | "paid";
   requestedAt: Date;
   processedAt?: Date;
   parentNotes?: string;
