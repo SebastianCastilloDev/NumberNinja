@@ -8,6 +8,87 @@ interface Problem {
   correctAnswer: number;
 }
 
+interface Level {
+  id: number;
+  name: string;
+  emoji: string;
+  description: string;
+  minRange: number;
+  maxRange: number;
+  pointsPerCorrect: number;
+  requiredScore: number;
+  color: string;
+}
+
+const LEVELS: Level[] = [
+  {
+    id: 1,
+    name: "Principiante",
+    emoji: "🐣",
+    description: "Sumas súper fáciles para empezar",
+    minRange: 1,
+    maxRange: 10,
+    pointsPerCorrect: 5,
+    requiredScore: 0,
+    color: "from-green-400 to-green-600"
+  },
+  {
+    id: 2,
+    name: "Explorador",
+    emoji: "🔍",
+    description: "Un poco más de desafío",
+    minRange: 5,
+    maxRange: 20,
+    pointsPerCorrect: 10,
+    requiredScore: 50,
+    color: "from-blue-400 to-blue-600"
+  },
+  {
+    id: 3,
+    name: "Aventurero",
+    emoji: "⚡",
+    description: "¡Ahora viene lo interesante!",
+    minRange: 10,
+    maxRange: 50,
+    pointsPerCorrect: 15,
+    requiredScore: 150,
+    color: "from-purple-400 to-purple-600"
+  },
+  {
+    id: 4,
+    name: "Guerrero",
+    emoji: "⚔️",
+    description: "Para ninjas valientes",
+    minRange: 20,
+    maxRange: 100,
+    pointsPerCorrect: 20,
+    requiredScore: 300,
+    color: "from-orange-400 to-orange-600"
+  },
+  {
+    id: 5,
+    name: "Maestro",
+    emoji: "🥷",
+    description: "¡El nivel de los verdaderos ninjas!",
+    minRange: 50,
+    maxRange: 200,
+    pointsPerCorrect: 30,
+    requiredScore: 500,
+    color: "from-red-400 to-red-600"
+  },
+  {
+    id: 6,
+    name: "Leyenda",
+    emoji: "👑",
+    description: "¡Solo para los más grandes maestros!",
+    minRange: 100,
+    maxRange: 500,
+    pointsPerCorrect: 50,
+    requiredScore: 800,
+    color: "from-yellow-400 to-yellow-600"
+  }
+];
+
 export default function Home() {
   const [currentProblem, setCurrentProblem] = useState<Problem>({ num1: 0, num2: 0, correctAnswer: 0 });
   const [userAnswer, setUserAnswer] = useState('');
@@ -16,20 +97,45 @@ export default function Home() {
   const [feedback, setFeedback] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [gameStarted, setGameStarted] = useState(false);
+  const [currentLevel, setCurrentLevel] = useState<Level>(LEVELS[0]);
+  const [showLevelSelector, setShowLevelSelector] = useState(false);
 
-  // Generar nuevo problema de suma
+  // Generar nuevo problema de suma basado en el nivel actual
   const generateProblem = (): Problem => {
-    const num1 = Math.floor(Math.random() * 50) + 1; // Números del 1 al 50
-    const num2 = Math.floor(Math.random() * 50) + 1;
+    const { minRange, maxRange } = currentLevel;
+    const num1 = Math.floor(Math.random() * (maxRange - minRange + 1)) + minRange;
+    const num2 = Math.floor(Math.random() * (maxRange - minRange + 1)) + minRange;
     const correctAnswer = num1 + num2;
     
     return { num1, num2, correctAnswer };
   };
 
-  // Inicializar primer problema
+  // Verificar si el jugador puede subir de nivel
+  const checkLevelUp = (newScore: number) => {
+    const nextLevel = LEVELS.find(level => level.requiredScore > currentLevel.requiredScore && newScore >= level.requiredScore);
+    if (nextLevel) {
+      setCurrentLevel(nextLevel);
+      setFeedback(`🎉 ¡SUBISTE DE NIVEL! Ahora eres ${nextLevel.emoji} ${nextLevel.name}!`);
+      setTimeout(() => {
+        setCurrentProblem(generateProblem());
+        setUserAnswer('');
+        setFeedback('');
+        setIsCorrect(null);
+      }, 3000);
+      return true;
+    }
+    return false;
+  };
+
+  // Obtener niveles disponibles basado en el puntaje
+  const getAvailableLevels = () => {
+    return LEVELS.filter(level => score >= level.requiredScore);
+  };
+
+  // Inicializar primer problema cuando cambia el nivel
   useEffect(() => {
     setCurrentProblem(generateProblem());
-  }, []);
+  }, [currentLevel]);
 
   // Validar respuesta
   const checkAnswer = () => {
@@ -41,17 +147,23 @@ export default function Home() {
     setIsCorrect(correct);
     
     if (correct) {
-      setScore(score + 10);
+      const newScore = score + currentLevel.pointsPerCorrect;
+      setScore(newScore);
       setStreak(streak + 1);
-      setFeedback('¡Excelente! 🎉');
       
-      // Generar nuevo problema después de 1.5 segundos
-      setTimeout(() => {
-        setCurrentProblem(generateProblem());
-        setUserAnswer('');
-        setFeedback('');
-        setIsCorrect(null);
-      }, 1500);
+      // Verificar si sube de nivel
+      const leveledUp = checkLevelUp(newScore);
+      if (!leveledUp) {
+        setFeedback(`¡Excelente! +${currentLevel.pointsPerCorrect} puntos 🎉`);
+        
+        // Generar nuevo problema después de 1.5 segundos
+        setTimeout(() => {
+          setCurrentProblem(generateProblem());
+          setUserAnswer('');
+          setFeedback('');
+          setIsCorrect(null);
+        }, 1500);
+      }
     } else {
       setStreak(0);
       setFeedback(`¡Ups! La respuesta correcta es ${currentProblem.correctAnswer} 🤔`);
@@ -74,7 +186,7 @@ export default function Home() {
   if (!gameStarted) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center max-w-4xl mx-auto p-4">
           <h1 className="font-fredoka text-6xl md:text-8xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent drop-shadow-2xl">
             Number Ninja
           </h1>
@@ -84,11 +196,46 @@ export default function Home() {
           <p className="font-comfortaa text-xl md:text-2xl text-white/80 mt-8 font-light tracking-wide">
             ¡Conviértete en un maestro de las matemáticas!
           </p>
+          
+          {/* Selector de Nivel */}
+          <div className="mt-12">
+            <h2 className="font-fredoka text-3xl text-white mb-8">Elige tu nivel de dificultad:</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+              {LEVELS.map((level) => {
+                const isLocked = score < level.requiredScore;
+                return (
+                  <div
+                    key={level.id}
+                    onClick={() => !isLocked && setCurrentLevel(level)}
+                    className={`
+                      p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300
+                      ${isLocked 
+                        ? 'bg-gray-600/50 border-gray-500 opacity-50 cursor-not-allowed' 
+                        : currentLevel.id === level.id
+                          ? 'bg-white/20 border-white transform scale-105 shadow-2xl'
+                          : 'bg-white/10 border-white/30 hover:bg-white/15 hover:border-white/50 hover:scale-102'
+                      }
+                    `}
+                  >
+                    <div className="text-4xl mb-2">{level.emoji}</div>
+                    <h3 className="font-fredoka text-xl font-bold text-white mb-2">{level.name}</h3>
+                    <p className="font-comfortaa text-sm text-white/80 mb-3">{level.description}</p>
+                    <div className="font-comfortaa text-xs text-white/70">
+                      <p>Números: {level.minRange} - {level.maxRange}</p>
+                      <p>Puntos: {level.pointsPerCorrect} por acierto</p>
+                      {isLocked && <p className="text-red-300 mt-2">🔒 Necesitas {level.requiredScore} puntos</p>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
           <button
             onClick={() => setGameStarted(true)}
             className="mt-12 font-fredoka text-2xl bg-gradient-to-r from-green-500 to-blue-600 text-white px-12 py-6 rounded-full hover:from-green-600 hover:to-blue-700 transform hover:scale-105 transition-all duration-300 shadow-2xl"
           >
-            🚀 ¡Comenzar Aventura!
+            🚀 ¡Comenzar con {currentLevel.emoji} {currentLevel.name}!
           </button>
         </div>
       </div>
