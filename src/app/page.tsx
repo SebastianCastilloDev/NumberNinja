@@ -1,93 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { 
+  GAME_CONFIG, 
+  Level, 
+  getLevelConfig, 
+  getAvailableLevels, 
+  getNextLevel, 
+  calculatePoints, 
+  convertPointsToCoins 
+} from '@/config/gameConfig';
 
 interface Problem {
   num1: number;
   num2: number;
   correctAnswer: number;
 }
-
-interface Level {
-  id: number;
-  name: string;
-  emoji: string;
-  description: string;
-  minRange: number;
-  maxRange: number;
-  pointsPerCorrect: number;
-  requiredScore: number;
-  color: string;
-}
-
-const LEVELS: Level[] = [
-  {
-    id: 1,
-    name: "Principiante",
-    emoji: "🐣",
-    description: "Sumas súper fáciles para empezar",
-    minRange: 1,
-    maxRange: 10,
-    pointsPerCorrect: 5,
-    requiredScore: 0,
-    color: "from-green-400 to-green-600"
-  },
-  {
-    id: 2,
-    name: "Explorador",
-    emoji: "🔍",
-    description: "Un poco más de desafío",
-    minRange: 5,
-    maxRange: 20,
-    pointsPerCorrect: 10,
-    requiredScore: 50,
-    color: "from-blue-400 to-blue-600"
-  },
-  {
-    id: 3,
-    name: "Aventurero",
-    emoji: "⚡",
-    description: "¡Ahora viene lo interesante!",
-    minRange: 10,
-    maxRange: 50,
-    pointsPerCorrect: 15,
-    requiredScore: 150,
-    color: "from-purple-400 to-purple-600"
-  },
-  {
-    id: 4,
-    name: "Guerrero",
-    emoji: "⚔️",
-    description: "Para ninjas valientes",
-    minRange: 20,
-    maxRange: 100,
-    pointsPerCorrect: 20,
-    requiredScore: 300,
-    color: "from-orange-400 to-orange-600"
-  },
-  {
-    id: 5,
-    name: "Maestro",
-    emoji: "🥷",
-    description: "¡El nivel de los verdaderos ninjas!",
-    minRange: 50,
-    maxRange: 200,
-    pointsPerCorrect: 30,
-    requiredScore: 500,
-    color: "from-red-400 to-red-600"
-  },
-  {
-    id: 6,
-    name: "Leyenda",
-    emoji: "👑",
-    description: "¡Solo para los más grandes maestros!",
-    minRange: 100,
-    maxRange: 500,
-    pointsPerCorrect: 50,
-    requiredScore: 800,
-    color: "from-yellow-400 to-yellow-600"
-  }
-];
 
 export default function Home() {
   const [currentProblem, setCurrentProblem] = useState<Problem>({ num1: 0, num2: 0, correctAnswer: 0 });
@@ -97,8 +25,9 @@ export default function Home() {
   const [feedback, setFeedback] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [gameStarted, setGameStarted] = useState(false);
-  const [currentLevel, setCurrentLevel] = useState<Level>(LEVELS[0]);
+  const [currentLevel, setCurrentLevel] = useState<Level>(GAME_CONFIG.levels[0]);
   const [showLevelSelector, setShowLevelSelector] = useState(false);
+  const [coins, setCoins] = useState(0);
 
   // Generar nuevo problema de suma basado en el nivel actual
   const generateProblem = (): Problem => {
@@ -112,7 +41,7 @@ export default function Home() {
 
   // Verificar si el jugador puede subir de nivel
   const checkLevelUp = (newScore: number) => {
-    const nextLevel = LEVELS.find(level => level.requiredScore > currentLevel.requiredScore && newScore >= level.requiredScore);
+    const nextLevel = getNextLevel(currentLevel, newScore);
     if (nextLevel) {
       setCurrentLevel(nextLevel);
       setFeedback(`🎉 ¡SUBISTE DE NIVEL! Ahora eres ${nextLevel.emoji} ${nextLevel.name}!`);
@@ -121,15 +50,15 @@ export default function Home() {
         setUserAnswer('');
         setFeedback('');
         setIsCorrect(null);
-      }, 3000);
+      }, GAME_CONFIG.game.levelUpDelay);
       return true;
     }
     return false;
   };
 
   // Obtener niveles disponibles basado en el puntaje
-  const getAvailableLevels = () => {
-    return LEVELS.filter(level => score >= level.requiredScore);
+  const getAvailableLevelsForPlayer = () => {
+    return getAvailableLevels(score);
   };
 
   // Inicializar primer problema cuando cambia el nivel
@@ -147,32 +76,42 @@ export default function Home() {
     setIsCorrect(correct);
     
     if (correct) {
-      const newScore = score + currentLevel.pointsPerCorrect;
+      // Calcular puntos con bonificadores
+      const basePoints = currentLevel.pointsPerCorrect;
+      const finalPoints = calculatePoints(basePoints, streak);
+      const newScore = score + finalPoints;
+      
       setScore(newScore);
       setStreak(streak + 1);
+      
+      // Actualizar monedas
+      setCoins(convertPointsToCoins(newScore));
       
       // Verificar si sube de nivel
       const leveledUp = checkLevelUp(newScore);
       if (!leveledUp) {
-        setFeedback(`¡Excelente! +${currentLevel.pointsPerCorrect} puntos 🎉`);
+        const pointsText = finalPoints > basePoints ? 
+          `¡Excelente! +${finalPoints} puntos (¡Bonus de racha!) 🎉` : 
+          `¡Excelente! +${finalPoints} puntos 🎉`;
+        setFeedback(pointsText);
         
-        // Generar nuevo problema después de 1.5 segundos
+        // Generar nuevo problema después del delay configurado
         setTimeout(() => {
           setCurrentProblem(generateProblem());
           setUserAnswer('');
           setFeedback('');
           setIsCorrect(null);
-        }, 1500);
+        }, GAME_CONFIG.game.correctAnswerDelay);
       }
     } else {
       setStreak(0);
       setFeedback(`¡Ups! La respuesta correcta es ${currentProblem.correctAnswer} 🤔`);
       
-      // Limpiar feedback después de 2 segundos
+      // Limpiar feedback después del delay configurado
       setTimeout(() => {
         setFeedback('');
         setIsCorrect(null);
-      }, 2000);
+      }, GAME_CONFIG.game.incorrectAnswerDelay);
     }
   };
 
@@ -201,7 +140,7 @@ export default function Home() {
           <div className="mt-12">
             <h2 className="font-fredoka text-3xl text-white mb-8">Elige tu nivel de dificultad:</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
-              {LEVELS.map((level) => {
+              {GAME_CONFIG.levels.map((level) => {
                 const isLocked = score < level.requiredScore;
                 return (
                   <div
@@ -276,6 +215,12 @@ export default function Home() {
             </div>
             
             <div className="text-center">
+              <div className="text-2xl">{GAME_CONFIG.rewards.coinEmoji}</div>
+              <div className="font-comfortaa text-sm text-white/80">{GAME_CONFIG.rewards.coinName}</div>
+              <div className="font-fredoka text-2xl font-bold text-green-400">{coins}</div>
+            </div>
+            
+            <div className="text-center">
               <div className="text-2xl">🔥</div>
               <div className="font-comfortaa text-sm text-white/80">Racha</div>
               <div className="font-fredoka text-2xl font-bold text-orange-400">{streak}</div>
@@ -290,7 +235,7 @@ export default function Home() {
           <div className="bg-white/95 backdrop-blur-md rounded-2xl p-6">
             <h3 className="font-fredoka text-2xl text-gray-800 mb-4 text-center">Selecciona un nivel:</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              {getAvailableLevels().map((level) => (
+              {getAvailableLevelsForPlayer().map((level) => (
                 <button
                   key={level.id}
                   onClick={() => {
@@ -383,11 +328,11 @@ export default function Home() {
             <p className="text-sm mt-2">🎯 Ganas {currentLevel.pointsPerCorrect} puntos por cada respuesta correcta en este nivel</p>
             
             {/* Mostrar progreso al siguiente nivel */}
-            {currentLevel.id < LEVELS.length && (
+            {currentLevel.id < GAME_CONFIG.levels.length && (
               <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                 <p className="text-sm text-blue-700">
-                  🎯 Próximo nivel: {LEVELS[currentLevel.id].emoji} {LEVELS[currentLevel.id].name} 
-                  ({Math.max(0, LEVELS[currentLevel.id].requiredScore - score)} puntos restantes)
+                  🎯 Próximo nivel: {GAME_CONFIG.levels[currentLevel.id].emoji} {GAME_CONFIG.levels[currentLevel.id].name} 
+                  ({Math.max(0, GAME_CONFIG.levels[currentLevel.id].requiredScore - score)} puntos restantes)
                 </p>
               </div>
             )}
