@@ -21,6 +21,12 @@ export const StartScreen: React.FC<StartScreenProps> = ({
   onLevelSelect,
   onStartGame
 }) => {
+  // Función para manejar clic en tarjeta de nivel
+  const handleLevelCardClick = (level: Level) => {
+    onLevelSelect(level); // Seleccionar el nivel
+    onStartGame(); // Iniciar el juego inmediatamente
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center max-w-4xl mx-auto p-4">
@@ -49,20 +55,25 @@ export const StartScreen: React.FC<StartScreenProps> = ({
                   level={level}
                   isLocked={isLocked}
                   isSelected={isSelected}
-                  onClick={() => !isLocked && onLevelSelect(level)}
+                  onClick={() => !isLocked && handleLevelCardClick(level)}
                 />
               );
             })}
           </div>
         </div>
         
-        {/* Botón de Inicio */}
-        <button
-          onClick={onStartGame}
-          className="mt-12 font-fredoka text-2xl bg-gradient-to-r from-green-500 to-blue-600 text-white px-12 py-6 rounded-full hover:from-green-600 hover:to-blue-700 transform hover:scale-105 transition-all duration-300 shadow-2xl"
-        >
-          🚀 ¡Comenzar con {currentLevel.emoji} {currentLevel.name}!
-        </button>
+        {/* Botón de Inicio Alternativo */}
+        <div className="mt-12">
+          <p className="font-comfortaa text-sm text-white/60 mb-4">
+            O también puedes usar este botón:
+          </p>
+          <button
+            onClick={onStartGame}
+            className="font-fredoka text-2xl bg-gradient-to-r from-green-500 to-blue-600 text-white px-12 py-6 rounded-full hover:from-green-600 hover:to-blue-700 transform hover:scale-105 transition-all duration-300 shadow-2xl"
+          >
+            🚀 ¡Comenzar con {currentLevel.emoji} {currentLevel.name}!
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -100,6 +111,9 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, isLocked, isSelected, onCl
         <p>Puntos: {level.pointsPerCorrect} por acierto</p>
         {isLocked && (
           <p className="text-red-300 mt-2">🔒 Necesitas {level.requiredScore} puntos</p>
+        )}
+        {!isLocked && (
+          <p className="text-green-300 mt-2 font-semibold">👆 ¡Haz clic para jugar!</p>
         )}
       </div>
     </div>
