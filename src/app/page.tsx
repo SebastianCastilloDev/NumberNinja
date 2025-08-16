@@ -246,12 +246,29 @@ export default function Home() {
     <div className="min-h-screen p-4">
       {/* Header con estadísticas */}
       <div className="max-w-4xl mx-auto mb-8">
-        <div className="flex justify-between items-center bg-white/10 backdrop-blur-md rounded-2xl p-6">
+        <div className="flex flex-col md:flex-row justify-between items-center bg-white/10 backdrop-blur-md rounded-2xl p-6 gap-4">
           <div className="flex items-center gap-4">
             <h1 className="font-fredoka text-3xl font-bold text-white">NumberNinja 🥷</h1>
           </div>
           
-          <div className="flex gap-8">
+          {/* Nivel actual */}
+          <div className="flex items-center gap-4">
+            <div className={`bg-gradient-to-r ${currentLevel.color} rounded-xl px-4 py-2`}>
+              <div className="text-center">
+                <div className="text-2xl">{currentLevel.emoji}</div>
+                <div className="font-fredoka text-sm font-bold text-white">{currentLevel.name}</div>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setShowLevelSelector(!showLevelSelector)}
+              className="font-comfortaa text-white/80 hover:text-white underline text-sm"
+            >
+              Cambiar nivel
+            </button>
+          </div>
+          
+          <div className="flex gap-6">
             <div className="text-center">
               <div className="text-2xl">🏆</div>
               <div className="font-comfortaa text-sm text-white/80">Puntos</div>
@@ -267,19 +284,65 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Selector de nivel desplegable */}
+      {showLevelSelector && (
+        <div className="max-w-4xl mx-auto mb-8">
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl p-6">
+            <h3 className="font-fredoka text-2xl text-gray-800 mb-4 text-center">Selecciona un nivel:</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {getAvailableLevels().map((level) => (
+                <button
+                  key={level.id}
+                  onClick={() => {
+                    setCurrentLevel(level);
+                    setShowLevelSelector(false);
+                    setUserAnswer('');
+                    setFeedback('');
+                    setIsCorrect(null);
+                  }}
+                  className={`
+                    p-4 rounded-xl border-2 transition-all duration-300
+                    ${currentLevel.id === level.id
+                      ? `bg-gradient-to-r ${level.color} text-white border-transparent transform scale-105`
+                      : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+                    }
+                  `}
+                >
+                  <div className="text-2xl mb-1">{level.emoji}</div>
+                  <div className="font-fredoka text-sm font-bold">{level.name}</div>
+                  <div className="font-comfortaa text-xs mt-1">{level.minRange}-{level.maxRange}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Área principal del juego */}
       <div className="max-w-3xl mx-auto">
         <div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 shadow-2xl">
           
           {/* Problema matemático */}
           <div className="text-center mb-8">
-            <h2 className="font-comfortaa text-2xl text-gray-700 mb-6">¡Resuelve esta suma!</h2>
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <h2 className="font-comfortaa text-2xl text-gray-700">¡Resuelve esta suma!</h2>
+              <div className={`bg-gradient-to-r ${currentLevel.color} rounded-lg px-3 py-1`}>
+                <span className="font-fredoka text-sm font-bold text-white">
+                  {currentLevel.emoji} {currentLevel.name}
+                </span>
+              </div>
+            </div>
             
-            <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-2xl p-8 mb-6">
+            <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-2xl p-8 mb-4">
               <div className="font-fredoka text-7xl md:text-8xl font-bold text-gray-800">
                 {currentProblem.num1} + {currentProblem.num2} = ?
               </div>
             </div>
+            
+            <p className="font-comfortaa text-sm text-gray-600">
+              Rango: {currentLevel.minRange} - {currentLevel.maxRange} | 
+              Puntos por acierto: {currentLevel.pointsPerCorrect}
+            </p>
           </div>
 
           {/* Input y botón */}
@@ -317,7 +380,17 @@ export default function Home() {
           {/* Instrucciones */}
           <div className="text-center text-gray-600 font-comfortaa">
             <p>💡 Escribe tu respuesta y presiona Enter o haz clic en Verificar</p>
-            <p className="text-sm mt-2">🎯 Ganas 10 puntos por cada respuesta correcta</p>
+            <p className="text-sm mt-2">🎯 Ganas {currentLevel.pointsPerCorrect} puntos por cada respuesta correcta en este nivel</p>
+            
+            {/* Mostrar progreso al siguiente nivel */}
+            {currentLevel.id < LEVELS.length && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  🎯 Próximo nivel: {LEVELS[currentLevel.id].emoji} {LEVELS[currentLevel.id].name} 
+                  ({Math.max(0, LEVELS[currentLevel.id].requiredScore - score)} puntos restantes)
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
