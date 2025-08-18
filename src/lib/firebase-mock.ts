@@ -11,4 +11,5 @@ console.log("🚧 Firebase temporalmente desactivado - usando modo Mock");
 export const db = null;
 export const auth = null;
 
-export default null;
+const firebaseMockConfig = null;
+export default firebaseMockConfig;

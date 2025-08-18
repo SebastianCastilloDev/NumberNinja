@@ -1,7 +1,6 @@
-// ==========================================================================
-// CONFIGURACIÓN DE FIREBASE PARA DESARROLLO
-// Version simplificada para pruebas locales
-// ==========================================================================
+import { initializeApp, FirebaseApp } from "firebase/app";
+import { getFirestore, Firestore } from "firebase/firestore";
+import { getAuth, Auth } from "firebase/auth";
 
 // Verificar si las variables de entorno están configuradas
 const firebaseConfig = {
@@ -23,16 +22,12 @@ console.log("🔥 Firebase Config Status:", {
 });
 
 // Solo intentar inicializar Firebase si tenemos credenciales reales
-let db: any = null;
-let auth: any = null;
+let db: Firestore | null = null;
+let auth: Auth | null = null;
 
 if (!isDemoMode) {
   try {
-    const { initializeApp } = require("firebase/app");
-    const { getFirestore } = require("firebase/firestore");
-    const { getAuth } = require("firebase/auth");
-
-    const app = initializeApp(firebaseConfig);
+    const app: FirebaseApp = initializeApp(firebaseConfig);
     db = getFirestore(app);
     auth = getAuth(app);
 
@@ -44,5 +39,6 @@ if (!isDemoMode) {
   console.log("🧪 Running in demo mode - Firebase disabled");
 }
 
+const firebaseDevConfig = { db, auth };
 export { db, auth };
-export default null;
+export default firebaseDevConfig;

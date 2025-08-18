@@ -31,7 +31,7 @@ interface UseFirebasePlayerResult {
   // Sesiones
   startGameSession: (levelId: number) => Promise<void>;
   endGameSession: (sessionData: { problemsSolved: number; correctAnswers: number; wrongAnswers: number; totalScore: number; coinsEarned: number; timeSpent: number; averageResponseTime: number }) => Promise<void>;
-  updateSessionStats: (updates: any) => Promise<void>;
+  updateSessionStats: (updates: Partial<GameSession>) => Promise<void>;
 
   // Utilidades
   clearPlayer: () => void;
@@ -50,6 +50,7 @@ export const useFirebasePlayer = (): UseFirebasePlayerResult => {
     if (savedPlayerId) {
       loadPlayer(savedPlayerId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const createPlayer = useCallback(async (name: string, preferences?: Partial<Player["preferences"]>) => {
@@ -211,7 +212,7 @@ export const useFirebasePlayer = (): UseFirebasePlayerResult => {
   );
 
   const endGameSession = useCallback(
-    async (sessionData: any) => {
+    async (sessionData: { problemsSolved: number; correctAnswers: number; wrongAnswers: number; totalScore: number; coinsEarned: number; timeSpent: number; averageResponseTime: number }) => {
       if (!currentSessionId) return;
 
       try {
@@ -227,7 +228,7 @@ export const useFirebasePlayer = (): UseFirebasePlayerResult => {
   );
 
   const updateSessionStats = useCallback(
-    async (updates: any) => {
+    async (updates: Partial<GameSession>) => {
       if (!currentSessionId) return;
 
       try {

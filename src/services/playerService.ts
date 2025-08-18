@@ -4,19 +4,34 @@
 // ==========================================================================
 
 import { collection, doc, getDoc, setDoc, updateDoc, query, where, getDocs, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase-mock"; // Usar configuración mock temporalmente
+import { db } from "@/lib/firebase-dev"; // Usar configuración de desarrollo
 import { Player, PlayerProgress, PlayerPreferences } from "@/interfaces";
 
 export class PlayerService {
   private static COLLECTION = "players";
 
   /**
+   * Verificar si Firebase está disponible
+   */
+  private static checkFirebaseAvailable(): boolean {
+    if (!db) {
+      console.warn("🚧 Firebase no está disponible. Usa MockPlayerService para desarrollo.");
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Crear un nuevo jugador
    */
   static async createPlayer(playerData: Omit<Player, "id" | "createdAt" | "lastLoginAt">): Promise<string> {
+    if (!this.checkFirebaseAvailable()) {
+      throw new Error("Firebase no está disponible. Usa MockPlayerService para desarrollo.");
+    }
+
     try {
       const playerId = `player_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const playerDoc = doc(db, this.COLLECTION, playerId);
+      const playerDoc = doc(db!, this.COLLECTION, playerId);
 
       const newPlayer: Player = {
         ...playerData,
@@ -60,8 +75,12 @@ export class PlayerService {
    * Obtener un jugador por ID
    */
   static async getPlayer(playerId: string): Promise<Player | null> {
+    if (!this.checkFirebaseAvailable()) {
+      throw new Error("Firebase no está disponible. Usa MockPlayerService para desarrollo.");
+    }
+
     try {
-      const playerDoc = doc(db, this.COLLECTION, playerId);
+      const playerDoc = doc(db!, this.COLLECTION, playerId);
       const playerSnap = await getDoc(playerDoc);
 
       if (playerSnap.exists()) {
@@ -88,8 +107,12 @@ export class PlayerService {
    * Buscar jugador por nombre
    */
   static async getPlayerByName(name: string): Promise<Player | null> {
+    if (!this.checkFirebaseAvailable()) {
+      throw new Error("Firebase no está disponible. Usa MockPlayerService para desarrollo.");
+    }
+
     try {
-      const playersRef = collection(db, this.COLLECTION);
+      const playersRef = collection(db!, this.COLLECTION);
       const q = query(playersRef, where("name", "==", name));
       const querySnapshot = await getDocs(q);
 
@@ -118,9 +141,13 @@ export class PlayerService {
    * Actualizar progreso del jugador
    */
   static async updateProgress(playerId: string, progressUpdates: Partial<PlayerProgress>): Promise<void> {
+    if (!this.checkFirebaseAvailable()) {
+      throw new Error("Firebase no está disponible. Usa MockPlayerService para desarrollo.");
+    }
+
     try {
-      const playerDoc = doc(db, this.COLLECTION, playerId);
-      const updateData: any = {};
+      const playerDoc = doc(db!, this.COLLECTION, playerId);
+      const updateData: Record<string, unknown> = {};
 
       // Convertir las claves del progreso para Firestore
       Object.entries(progressUpdates).forEach(([key, value]) => {
@@ -142,9 +169,13 @@ export class PlayerService {
    * Actualizar preferencias del jugador
    */
   static async updatePreferences(playerId: string, preferences: Partial<PlayerPreferences>): Promise<void> {
+    if (!this.checkFirebaseAvailable()) {
+      throw new Error("Firebase no está disponible. Usa MockPlayerService para desarrollo.");
+    }
+
     try {
-      const playerDoc = doc(db, this.COLLECTION, playerId);
-      const updateData: any = {};
+      const playerDoc = doc(db!, this.COLLECTION, playerId);
+      const updateData: Record<string, unknown> = {};
 
       // Convertir las claves de las preferencias para Firestore
       Object.entries(preferences).forEach(([key, value]) => {
@@ -162,8 +193,12 @@ export class PlayerService {
    * Obtener todos los jugadores (para el dashboard de padres)
    */
   static async getAllPlayers(): Promise<Player[]> {
+    if (!this.checkFirebaseAvailable()) {
+      throw new Error("Firebase no está disponible. Usa MockPlayerService para desarrollo.");
+    }
+
     try {
-      const playersRef = collection(db, this.COLLECTION);
+      const playersRef = collection(db!, this.COLLECTION);
       const querySnapshot = await getDocs(playersRef);
 
       return querySnapshot.docs.map((doc) => {

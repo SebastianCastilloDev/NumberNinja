@@ -6,7 +6,7 @@
 import { Player, GameSession, PlayerProgress, PlayerPreferences } from "@/interfaces";
 
 // Almacenamiento local simulado
-let mockDatabase: {
+const mockDatabase: {
   players: Record<string, Player>;
   sessions: Record<string, GameSession>;
 } = {
@@ -176,7 +176,7 @@ export class MockSessionService {
     return sessionId;
   }
 
-  static async endSession(sessionId: string, sessionData: any): Promise<void> {
+  static async endSession(sessionId: string, sessionData: Partial<GameSession>): Promise<void> {
     await delay(100);
 
     const session = mockDatabase.sessions[sessionId];
@@ -186,7 +186,7 @@ export class MockSessionService {
     }
   }
 
-  static async updateSessionStats(sessionId: string, updates: any): Promise<void> {
+  static async updateSessionStats(sessionId: string, updates: Partial<GameSession>): Promise<void> {
     await delay(50);
 
     const session = mockDatabase.sessions[sessionId];
