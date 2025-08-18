@@ -4,3 +4,4 @@
 // ==========================================================================
 
 export { useGameState } from "./useGameState";
+export { useFirebasePlayer } from "./useFirebasePlayer";

@@ -6,3 +6,4 @@
 export { StartScreen } from "./StartScreen";
 export { GameHeader } from "./GameHeader";
 export { GameArea } from "./GameArea";
+export { PlayerSelection } from "./PlayerSelection";
